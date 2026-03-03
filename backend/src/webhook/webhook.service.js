@@ -9,11 +9,19 @@ async function processGithubWebhookEvents(githubEvent, payload) {
         return;
     }
 
-    const savedEvent = await prisma.event.create({
-        data: eventData,
+    const savedEvent = await prisma.event.upsert({
+        where: {
+            githubEventId: eventData.githubEventId,
+        },
+        update: {
+            status: eventData.status,
+        },
+        create: eventData,
     });
 
-    console.log(`Saved new ${githubEvent} for ${eventData.repoName}`);
+    console.log(
+        `Saved/Updated new ${githubEvent} for ${eventData.repoName} with status: ${eventData.status}`,
+    );
 
     emitToAll("new_github_event", savedEvent);
 }
