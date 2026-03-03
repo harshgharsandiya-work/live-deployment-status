@@ -12,16 +12,47 @@ datasource db {
   provider = "postgresql"
 }
 
-model Event {
+model User {
+  id           String         @id @default(cuid())
+  githubId     String         @unique // Link with github account
+  username     String
+  email        String?        @unique
+  accessToken  String
+  repositories Repositories[]
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+model Repositories {
   id            String  @id @default(cuid())
-  githubEventId String  @unique
-  repoName      String
-  commitSha     String?
-  branch        String?
-  status        String // e.g., 'pending', 'success', 'failure'
-  eventType     String // e.g., 'push', 'pull_request', 'workflow_run'
-  message       String?
-  author        String?
+  githubRepoId  String  @unique
+  name          String //  "repo-name"
+  fullname      String //  "username/repo-name"
+  webhookSecret String?
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  githubEvents GithubEvent[]
+
+  createdAt DateTime @default(now())
+  updateAt  DateTime @updatedAt
+}
+
+model GithubEvent {
+  id            String @id @default(cuid())
+  githubEventId String @unique
+
+  repositoryId String
+  repository   Repositories @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+
+  commitSha String?
+  branch    String?
+  status    String // e.g., 'pending', 'success', 'failure'
+  eventType String // e.g., 'push', 'pull_request', 'workflow_run'
+  message   String?
+  author    String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
