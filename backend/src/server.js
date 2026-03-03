@@ -4,7 +4,7 @@ const http = require("http");
 
 const app = require("./app");
 const prisma = require("./config/prisma");
-const initSocket = require("./socket/index");
+const { initSocket } = require("./socket/index");
 
 const PORT = process.env.PORT || 4000;
 
