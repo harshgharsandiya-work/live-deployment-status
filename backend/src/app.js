@@ -3,6 +3,7 @@ const cors = require("cors");
 
 //routes import
 const webhookRoutes = require("./webhook/webhook.routes");
+const eventsRoutes = require("./events/events.routes");
 
 const app = express();
 
@@ -23,5 +24,6 @@ app.get("/", async (req, res) => {
 
 //routes
 app.use("/api/webhook", webhookRoutes);
+app.use("/api/events", eventsRoutes);
 
 module.exports = app;

@@ -2,9 +2,10 @@
 
 import { ConnectionStatus, EventList } from "@/components/github-events";
 import { useGithubEvents } from "@/hooks/useGithubEvents";
+import "@/style/spinner.css";
 
 export default function Home() {
-    const { events, isConnected } = useGithubEvents();
+    const { events, isConnected, isLoading } = useGithubEvents();
 
     return (
         <main className="min-h-screen bg-gray-50 p-8 text-gray-900">
@@ -16,7 +17,11 @@ export default function Home() {
                     <ConnectionStatus isConnected={isConnected} />
                 </header>
                 <div className="bg-white rounded-lg shadow border p-6">
-                    <EventList events={events} />
+                    {isLoading ? (
+                        <div className="loader"></div>
+                    ) : (
+                        <EventList events={events} />
+                    )}
                 </div>
             </div>
         </main>
