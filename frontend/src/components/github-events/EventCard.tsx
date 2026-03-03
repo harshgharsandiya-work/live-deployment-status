@@ -25,14 +25,14 @@ export function EventCard({ event }: Props) {
                 <p className="text-sm text-gray-700 mt-1">{event.message}</p>
             </div>
 
-            <div>
+            <div className="flex flex-col gap-5">
                 <span
                     className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${statusColor}`}
                 >
                     {" "}
                     {event.status}
                 </span>
-                <span className="text-xs text-gray-400 mt-2">
+                <span className="text-xs text-gray-400 ml-3">
                     {new Date(event.updatedAt).toLocaleTimeString()}
                 </span>
             </div>

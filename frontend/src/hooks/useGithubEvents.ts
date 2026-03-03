@@ -37,7 +37,9 @@ export function useGithubEvents() {
         socket.connect();
 
         socket.on("connect", () => {
-            setIsConnected(true);
+            setTimeout(() => {
+                setIsConnected(true);
+            }, 2100);
             console.log("Connected to WebSocket server");
         });
 
