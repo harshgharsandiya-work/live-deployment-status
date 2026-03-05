@@ -12,7 +12,7 @@ async function githubLogin(req, res) {
         `https://github.com/login/oauth/authorize` +
         `?client_id=${githubClientId}` +
         `&redirect_uri=${redirectUri}` +
-        `&scope=user:email`;
+        `&scope=user:email,repo,admin:repo_hook`;
 
     res.redirect(authUrl);
 }

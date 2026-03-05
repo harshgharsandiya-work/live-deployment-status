@@ -1,5 +1,9 @@
 const prisma = require("../config/prisma");
-const { createRepoWebhook, fetchUserRepos } = require("./github.service");
+const {
+    createRepoWebhook,
+    fetchUserRepos,
+    fetchRepoById,
+} = require("./github.service");
 
 // fetch user repos
 async function getRepositories(req, res) {
@@ -42,7 +46,7 @@ async function getRepositories(req, res) {
 
 //register repo & create webhook
 async function registerRepository(req, res) {
-    const { githubRepoId, name, fullname, owner } = req.body;
+    const { githubRepoId } = req.body;
     const { userId } = req.user;
 
     try {
@@ -51,6 +55,12 @@ async function registerRepository(req, res) {
                 id: userId,
             },
         });
+
+        if (!user || !user.accessToken) {
+            return res
+                .status(404)
+                .json({ error: "User or access token not found" });
+        }
 
         const existingRepo = await prisma.repositories.findUnique({
             where: { githubRepoId },
@@ -61,6 +71,19 @@ async function registerRepository(req, res) {
                 .status(400)
                 .json({ error: `${existingRepo.name} is aldready registered` });
         }
+
+        // fetch details from GitHub using user's token
+        const repoData = await fetchRepoById(user.accessToken, githubRepoId);
+
+        if (!repoData || !repoData.permissions?.admin) {
+            return res.status(403).json({
+                error: "You do not have admin access to this repository",
+            });
+        }
+
+        const name = repoData.name;
+        const fullname = repoData.full_name;
+        const owner = repoData.owner.login;
 
         //config for webhook
         const webhookUrl = `${process.env.BASE_URL}/api/webhook/github`;

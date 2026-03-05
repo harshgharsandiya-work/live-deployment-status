@@ -12,7 +12,7 @@ async function processGithubWebhookEvents(githubEvent, payload) {
     // find repository
     const repository = await prisma.repositories.findUnique({
         where: {
-            fullname: eventData.repoFullName,
+            githubRepoId: eventData.githubRepoId,
         },
     });
 

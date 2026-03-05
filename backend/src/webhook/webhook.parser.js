@@ -8,6 +8,7 @@ function parseGithubEvents(githubEvent, payload) {
     let eventData = {
         repoName: payload.repository?.name || "unknown-repo",
         repoFullName: payload.repository?.full_name,
+        githubRepoId: payload.repository?.id?.toString(),
         eventType: githubEvent,
         status: "pending",
         githubEventId: "",

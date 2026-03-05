@@ -9,7 +9,7 @@ function authenticateUser(req, res, next) {
         });
     }
 
-    const token = authHeader.split(" ");
+    const token = authHeader.split(" ")[1];
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -17,6 +17,7 @@ function authenticateUser(req, res, next) {
          * {userId, username}
          */
         req.user = decoded;
+        next();
     } catch (error) {
         return res.status(401).json({
             error: "Unauthorized: Invalid Token",
