@@ -2,6 +2,7 @@ export interface GithubEvent {
     id: string;
     githubEventId: string;
     repoName: string;
+    repositoryId: string;
     commitSha?: string | null;
     branch?: string | null;
     status: string; // 'pending', 'success', 'failure', etc.

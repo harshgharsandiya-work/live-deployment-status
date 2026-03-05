@@ -5,8 +5,35 @@ const {
     fetchRepoById,
 } = require("./github.service");
 
-// fetch user repos
+// fetch user connected repos from DB
 async function getRepositories(req, res) {
+    const { userId } = req.user;
+
+    try {
+        const repos = await prisma.repositories.findMany({
+            where: {
+                userId: userId,
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
+        });
+
+        res.status(200).json(repos);
+    } catch (error) {
+        console.error(
+            "Error fetching db repos: ",
+            error.response?.data || error.message,
+        );
+
+        res.status(500).json({
+            error: "Failed to fetch connected repositories",
+        });
+    }
+}
+
+// fetch user repos from GitHub API
+async function getGithubRepositories(req, res) {
     const { userId } = req.user;
 
     try {
@@ -36,11 +63,11 @@ async function getRepositories(req, res) {
         res.status(200).json(formattedRepo);
     } catch (error) {
         console.error(
-            "Error fetching repos: ",
+            "Error fetching github repos: ",
             error.response?.data || error.message,
         );
 
-        res.status(500).json({ error: "Failed to fetch repositories" });
+        res.status(500).json({ error: "Failed to fetch GitHub repositories" });
     }
 }
 
@@ -90,13 +117,24 @@ async function registerRepository(req, res) {
         const webhookSecret = process.env.GITHUB_WEBHOOK_SECRET;
 
         //auto-create webhook via Github REST API
-        await createRepoWebhook(
-            user.accessToken,
-            owner,
-            name,
-            webhookUrl,
-            webhookSecret,
-        );
+        try {
+            await createRepoWebhook(
+                user.accessToken,
+                owner,
+                name,
+                webhookUrl,
+                webhookSecret,
+            );
+        } catch (webhookError) {
+            // If the webhook already exists, GitHub returns 422. We can safely ignore this and continue registering the repo.
+            if (webhookError.response?.status === 422) {
+                console.log(
+                    `Webhook already exists for ${fullname}. Advancing to save.`,
+                );
+            } else {
+                throw webhookError;
+            }
+        }
 
         //save repo to db
         const savedRepo = await prisma.repositories.create({
@@ -104,7 +142,6 @@ async function registerRepository(req, res) {
                 githubRepoId: githubRepoId.toString(),
                 name,
                 fullname,
-                owner,
                 userId,
             },
         });
@@ -123,4 +160,4 @@ async function registerRepository(req, res) {
     }
 }
 
-module.exports = { getRepositories, registerRepository };
+module.exports = { getRepositories, getGithubRepositories, registerRepository };

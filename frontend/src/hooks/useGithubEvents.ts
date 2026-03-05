@@ -4,28 +4,42 @@ import { useEffect, useState } from "react";
 import { socket } from "@/lib/socket";
 import { GithubEvent } from "@/types/event.types";
 import { fetchGithubEvents } from "@/lib/api/githubEvents";
+import { api } from "@/lib/api";
 
-export function useGithubEvents() {
+export function useGithubEvents(filterRepositoryId?: string) {
     const [events, setEvents] = useState<GithubEvent[]>([]);
     const [isConnected, setIsConnected] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        loadInitialEvents();
-        initSocket();
+        let isMounted = true;
 
-        //cleanup on unmount
-        return cleanup;
-    }, []);
+        async function initialize() {
+            if (!isMounted) return;
+            await loadInitialEvents();
+            initSocket();
+        }
+
+        initialize();
+
+        return () => {
+            isMounted = false;
+            cleanup();
+        };
+    }, [filterRepositoryId]);
 
     //fetch inital events
     async function loadInitialEvents() {
         try {
-            const [data] = await Promise.all([
-                fetchGithubEvents(),
-                new Promise((resolve) => setTimeout(resolve, 2200)),
-            ]);
-            setEvents(data);
+            const data = await fetchGithubEvents();
+            // Filter initially if a repository is specified
+            if (filterRepositoryId) {
+                setEvents(
+                    data.filter((e) => e.repositoryId === filterRepositoryId),
+                );
+            } else {
+                setEvents(data);
+            }
         } catch (error) {
             console.error("Error fetching events: ", error);
         } finally {
@@ -33,14 +47,25 @@ export function useGithubEvents() {
         }
     }
 
-    function initSocket() {
+    async function initSocket() {
         socket.connect();
 
-        socket.on("connect", () => {
-            setTimeout(() => {
-                setIsConnected(true);
-            }, 2100);
+        socket.on("connect", async () => {
+            setIsConnected(true);
             console.log("Connected to WebSocket server");
+
+            // Fetch connected repos and join rooms
+            try {
+                const res = await api.get("/repos");
+                const connectedRepos = res.data;
+                connectedRepos.forEach((repo: any) => {
+                    if (!filterRepositoryId || repo.id === filterRepositoryId) {
+                        socket.emit("join-room", `repo_${repo.id}`);
+                    }
+                });
+            } catch (err) {
+                console.error("Failed to load repos for socket rooms", err);
+            }
         });
 
         socket.on("disconnect", () => {
@@ -53,6 +78,14 @@ export function useGithubEvents() {
 
     //listen to new_github_event event from backend
     function handleIncomingEvent(newEvent: GithubEvent) {
+        // Drop the event if we are filtering by a different repository
+        if (
+            filterRepositoryId &&
+            newEvent.repositoryId !== filterRepositoryId
+        ) {
+            return;
+        }
+
         setEvents((prevEvents) => {
             //if event aldready exist, update it
             const exists = prevEvents.findIndex(

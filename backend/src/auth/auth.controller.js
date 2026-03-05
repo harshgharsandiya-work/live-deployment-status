@@ -98,10 +98,8 @@ async function githubCallback(req, res) {
             { expiresIn: "7d" },
         );
 
-        res.json(jwt_token);
-
-        // const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-        // res.redirect(`${frontendUrl}/auth/success?token=${jwt_token}`);
+        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+        res.redirect(`${frontendUrl}/auth/success?token=${jwt_token}`);
     } catch (error) {
         console.error(
             "GitHub OAuth Callback Error:",

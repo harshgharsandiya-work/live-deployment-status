@@ -31,7 +31,13 @@ async function processGithubWebhookEvents(githubEvent, payload) {
             status: eventData.status,
         },
         create: {
-            ...eventData,
+            githubEventId: eventData.githubEventId,
+            commitSha: eventData.commitSha,
+            branch: eventData.branch,
+            status: eventData.status,
+            eventType: eventData.eventType,
+            message: eventData.message,
+            author: eventData.author,
             repositoryId: repository.id,
         },
     });
