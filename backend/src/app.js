@@ -4,6 +4,7 @@ const cors = require("cors");
 //routes import
 const webhookRoutes = require("./webhook/webhook.routes");
 const eventsRoutes = require("./events/events.routes");
+const authRoutes = require("./auth/auth.routes");
 
 const app = express();
 
@@ -25,5 +26,6 @@ app.get("/", async (req, res) => {
 //routes
 app.use("/api/webhook", webhookRoutes);
 app.use("/api/events", eventsRoutes);
+app.use("/api/auth", authRoutes);
 
 module.exports = app;

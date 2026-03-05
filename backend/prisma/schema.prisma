@@ -17,6 +17,7 @@ model User {
   githubId     String         @unique // Link with github account
   username     String
   email        String?        @unique
+  avatarUrl    String?
   accessToken  String
   repositories Repositories[]
 
