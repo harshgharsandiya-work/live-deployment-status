@@ -1,12 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { ConnectionStatus, EventList } from "@/components/github-events";
 import { useGithubEvents } from "@/hooks/useGithubEvents";
 import { useRepositories } from "@/hooks/useRepositories";
 
-export default function DashboardPage() {
+function DashboardContent() {
+    const searchParams = useSearchParams();
     const [selectedRepoFilter, setSelectedRepoFilter] = useState<string>("");
+
+    useEffect(() => {
+        const repoFromUrl = searchParams.get("repo");
+        if (repoFromUrl) {
+            setSelectedRepoFilter(repoFromUrl);
+        }
+    }, [searchParams]);
     const {
         events,
         isConnected,
@@ -62,5 +71,13 @@ export default function DashboardPage() {
                 )}
             </div>
         </div>
+    );
+}
+
+export default function DashboardPage() {
+    return (
+        <Suspense fallback={<div>Loading dashboard...</div>}>
+            <DashboardContent />
+        </Suspense>
     );
 }

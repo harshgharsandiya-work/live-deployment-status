@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRepositories } from "@/hooks/useRepositories";
+import { api } from "@/lib/api";
 import {
     Card,
     CardContent,
@@ -12,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { FolderGit2, Loader2, Plus, Github } from "lucide-react";
+import Link from "next/link";
 
 export default function RepositoriesPage() {
     const { repositories, githubRepos, isLoading, error, registerRepository } =
@@ -22,6 +24,18 @@ export default function RepositoriesPage() {
         type: "success" | "error";
         message: string;
     } | null>(null);
+    const [installUrl, setInstallUrl] = useState("");
+
+    useEffect(() => {
+        api.get("/auth/github/app-name")
+            .then((res) => {
+                const appName = res.data.appName;
+                setInstallUrl(
+                    `https://github.com/apps/${appName}/installations/new`,
+                );
+            })
+            .catch((err) => console.error("Could not fetch app name", err));
+    }, []);
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -120,13 +134,30 @@ export default function RepositoriesPage() {
 
                                 {feedback && (
                                     <div
-                                        className={`p-3 text-sm rounded-md ${
+                                        className={`p-3 text-sm rounded-md space-y-2 ${
                                             feedback.type === "error"
                                                 ? "bg-red-50 text-red-600 border border-red-200"
                                                 : "bg-green-50 text-green-700 border border-green-200"
                                         }`}
                                     >
-                                        {feedback.message}
+                                        <p>{feedback.message}</p>
+                                        {feedback.type === "error" &&
+                                            installUrl && (
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="w-full mt-2 bg-white"
+                                                    asChild
+                                                >
+                                                    <a
+                                                        href={installUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                    >
+                                                        Install GitHub App First
+                                                    </a>
+                                                </Button>
+                                            )}
                                     </div>
                                 )}
 
@@ -178,24 +209,26 @@ export default function RepositoriesPage() {
                     ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {repositories.map((repo) => (
-                                <Card
+                                <Link
                                     key={repo.githubRepoId}
-                                    className="hover:border-indigo-200 transition-colors"
+                                    href={`/dashboard?repo=${repo.id}`}
                                 >
-                                    <CardContent className="p-5 flex items-start justify-between">
-                                        <div className="space-y-1 overflow-hidden">
-                                            <div className="flex items-center gap-2">
-                                                <FolderGit2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                                <span className="font-medium text-gray-900 truncate">
-                                                    {repo.name}
-                                                </span>
+                                    <Card className="hover:border-indigo-400 hover:shadow-md transition-all cursor-pointer h-full">
+                                        <CardContent className="p-5 flex items-start justify-between">
+                                            <div className="space-y-1 overflow-hidden">
+                                                <div className="flex items-center gap-2">
+                                                    <FolderGit2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                                    <span className="font-medium text-gray-900 truncate">
+                                                        {repo.name}
+                                                    </span>
+                                                </div>
+                                                <p className="text-xs text-gray-500 font-mono truncate">
+                                                    {repo.fullname}
+                                                </p>
                                             </div>
-                                            <p className="text-xs text-gray-500 font-mono truncate">
-                                                {repo.fullname}
-                                            </p>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
                             ))}
                         </div>
                     )}

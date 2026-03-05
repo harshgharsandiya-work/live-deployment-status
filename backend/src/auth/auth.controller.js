@@ -109,4 +109,10 @@ async function githubCallback(req, res) {
     }
 }
 
-module.exports = { githubCallback, githubLogin };
+// get github app configuration for installation link
+function getGithubAppName(req, res) {
+    const appName = process.env.GITHUB_APP_NAME || "integration-1";
+    res.json({ appName });
+}
+
+module.exports = { githubCallback, githubLogin, getGithubAppName };
