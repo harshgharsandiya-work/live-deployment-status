@@ -29,7 +29,7 @@ model Repositories {
   id            String  @id @default(cuid())
   githubRepoId  String  @unique
   name          String //  "repo-name"
-  fullname      String //  "username/repo-name"
+  fullname      String  @unique //  "username/repo-name"
   webhookSecret String?
 
   userId String

@@ -3,11 +3,14 @@ const prisma = require("../config/prisma");
 async function getPastEvents(req, res) {
     try {
         //limit to past 30 events
-        const events = await prisma.event.findMany({
+        const events = await prisma.githubEvent.findMany({
             orderBy: {
                 updatedAt: "desc",
             },
             take: 30,
+            include: {
+                repository: true,
+            },
         });
         res.status(200).json(events);
     } catch (error) {
